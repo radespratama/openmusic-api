@@ -1,5 +1,5 @@
-require('dotenv').config();
-const Hapi = require('@hapi/hapi');
+require("dotenv").config();
+const Hapi = require("@hapi/hapi");
 
 // Songs
 const songs = require("./api/song");
@@ -13,7 +13,7 @@ const AlbumValidator = require("./validator/album");
 
 const ClientError = require("./exceptions/ClientError");
 
-async function initServer(){
+async function initServer() {
   const songService = new SongService();
   const albumService = new AlbumService();
 
@@ -22,9 +22,9 @@ async function initServer(){
     host: process.env.HOST,
     routes: {
       cors: {
-        origin: ['*']
-      }
-    }
+        origin: ["*"],
+      },
+    },
   });
 
   server.ext("onPreResponse", (req, h) => {
@@ -55,11 +55,11 @@ async function initServer(){
         service: albumService,
         validator: AlbumValidator,
       },
-    }
+    },
   ]);
 
   await server.start();
-  console.info(`Server running in ${server.info.uri}`)
+  console.info(`Server running in ${server.info.uri}`);
 }
 
 initServer();
