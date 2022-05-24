@@ -22,7 +22,7 @@ exports.up = (pgm) => {
     },
     duration: {
       type: "INTEGER",
-      notNull: false
+      notNull: false,
     },
     albumId: {
       type: "VARCHAR(50)",
@@ -43,7 +43,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     "songs",
     "fk_album.album_id_albums.id",
-    'FOREIGN KEY ("albumId") REFERENCES albums(id) ON DELETE CASCADE'
+    'FOREIGN KEY ("albumId") REFERENCES albums(id) ON DELETE CASCADE',
   );
 };
 

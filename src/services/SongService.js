@@ -11,7 +11,9 @@ class SongService {
     this._collaborationService = collaborationService;
   }
 
-  async addSong({ title, year, genre, performer, duration, albumId }) {
+  async addSong({
+    title, year, genre, performer, duration, albumId,
+  }) {
     const id = `song-${nanoid(16)}`;
     const insertedAt = new Date().toISOString();
 
@@ -58,7 +60,9 @@ class SongService {
 
   async updateSongById(
     id,
-    { title, year, genre, performer, duration, albumId }
+    {
+      title, year, genre, performer, duration, albumId,
+    },
   ) {
     const updatedAt = new Date().toISOString();
     const query = {

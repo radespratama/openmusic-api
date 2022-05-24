@@ -1,4 +1,6 @@
-const mapDbToModel = ({ id, name, year, inserted_at, updated_at }) => ({
+const mapDbToModel = ({
+  id, name, year, inserted_at, updated_at,
+}) => ({
   id,
   name,
   year,
