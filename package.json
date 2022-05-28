@@ -2,7 +2,6 @@
   "name": "openmusic_api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "start-dev": "nodemon src/server.js",
     "start": "node src/server.js",
@@ -14,7 +13,9 @@
   "license": "ISC",
   "dependencies": {
     "@hapi/hapi": "^20.2.1",
+    "@hapi/jwt": "^2.1.1",
     "auto-bind": "4.0.0",
+    "bcrypt": "^5.0.1",
     "dotenv": "^16.0.0",
     "joi": "^17.6.0",
     "nanoid": "^3.3.1",
