@@ -23,13 +23,25 @@ const AuthenticationService = require("./services/AuthenticationService");
 const TokenManager = require("./tokenize/TokenManager");
 const AuthenticationValidator = require("./validator/authentication");
 
+// Playlist
+const playlists = require("./api/playlist");
+const PlaylistService = require("./services/PlaylistService");
+const PlaylistValidator = require("./validator/playlist");
+
+// Collaboration
+const collaborations = require("./api/collaboration");
+const CollaborationService = require("./services/CollaborationService");
+const CollaborationValidator = require("./validator/collaboration");
+
 const ClientError = require("./exceptions/ClientError");
 
 async function initServer() {
+  const collaborationService = new CollaborationService();
   const songService = new SongService();
   const albumService = new AlbumService();
-  const userService = new UserService();
+  const playlistService = new PlaylistService(collaborationService);
   const authenticationService = new AuthenticationService();
+  const userService = new UserService();
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -106,6 +118,21 @@ async function initServer() {
         userService,
         tokenManager: TokenManager,
         validator: AuthenticationValidator,
+      },
+    },
+    {
+      plugin: playlists,
+      options: {
+        service: playlistService,
+        validator: PlaylistValidator,
+      },
+    },
+    {
+      plugin: collaborations,
+      options: {
+        collaborationService,
+        playlistService,
+        validator: CollaborationValidator,
       },
     },
   ]);
