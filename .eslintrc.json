@@ -10,7 +10,7 @@
   },
   "rules": {
     "linebreak-style": "off",
-    "quotes": "off",
+    "quotes": ["warn", "double"],
     "space-before-blocks": "off",
     "no-console": "off",
     "no-underscore-dangle": "off",

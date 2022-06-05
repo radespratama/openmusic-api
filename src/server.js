@@ -1,50 +1,72 @@
 require("dotenv").config();
+
+const { resolve } = require("path");
 const Hapi = require("@hapi/hapi");
 const Jwt = require("@hapi/jwt");
+const Inert = require("@hapi/inert");
 
-// Songs
-const songs = require("./api/song");
-const SongService = require("./services/SongService");
-const SongValidator = require("./validator/song");
+const albums = require("./api/albums");
+const AlbumsService = require("./services/postgres/AlbumsService");
+const AlbumsValidator = require("./validator/albums");
 
-// Albums
-const albums = require("./api/album");
-const AlbumService = require("./services/AlbumService");
-const AlbumValidator = require("./validator/album");
+const songs = require("./api/songs");
+const SongsService = require("./services/postgres/SongsService");
+const SongsValidator = require("./validator/songs");
 
-// User
-const users = require("./api/user");
-const UserService = require("./services/UserService");
-const UserValidator = require("./validator/user");
+const users = require("./api/users");
+const UsersService = require("./services/postgres/UsersService");
+const UsersValidator = require("./validator/users");
 
-// Authentication
-const authentications = require("./api/authentication");
-const AuthenticationService = require("./services/AuthenticationService");
+const authentications = require("./api/authentications");
+const AuthenticationsService = require("./services/postgres/AuthenticationsService");
 const TokenManager = require("./tokenize/TokenManager");
-const AuthenticationValidator = require("./validator/authentication");
+const AuthenticationsValidator = require("./validator/authentications");
 
-// Playlist
-const playlists = require("./api/playlist");
-const PlaylistService = require("./services/PlaylistService");
-const PlaylistValidator = require("./validator/playlist");
+const playlists = require("./api/playlists");
+const PlaylistsService = require("./services/postgres/PlaylistsService");
+const PlaylistsValidator = require("./validator/playlists");
 
-// Collaboration
-const collaborations = require("./api/collaboration");
-const CollaborationService = require("./services/CollaborationService");
-const CollaborationValidator = require("./validator/collaboration");
+const playlistSongs = require("./api/playlist_songs");
+const PlaylistSongsService = require("./services/postgres/PlaylistSongsService");
+const PlaylistSongsValidator = require("./validator/playlist_songs");
 
-const ClientError = require("./exceptions/ClientError");
+const collaborations = require("./api/collaborations");
+const CollaborationsService = require("./services/postgres/CollaborationsService");
+const CollaborationsValidator = require("./validator/collaborations");
 
-async function initServer() {
-  const collaborationService = new CollaborationService();
-  const songService = new SongService();
-  const albumService = new AlbumService();
-  const playlistService = new PlaylistService(collaborationService);
-  const authenticationService = new AuthenticationService();
-  const userService = new UserService();
+const playlistSongActivities = require("./api/playlist_song_activities");
+const PlaylistSongActivitiesService = require("./services/postgres/PlaylistSongActivitiesService");
+
+const _exports = require("./api/exports");
+const ProducerService = require("./services/rabbitmq/ProducerService");
+const ExportsValidator = require("./validator/exports");
+
+const uploads = require("./api/uploads");
+const StorageService = require("./services/storage/StorageService");
+const UploadsValidator = require("./validator/uploads");
+
+const albumLikes = require("./api/album_likes");
+const AlbumLikesService = require("./services/postgres/AlbumLikesService");
+
+const CacheService = require("./services/redis/CacheService");
+
+const init = async () => {
+  const albumsService = new AlbumsService();
+  const songsService = new SongsService();
+  const usersService = new UsersService();
+  const authenticationsService = new AuthenticationsService();
+  const collaborationsService = new CollaborationsService();
+  const playlistsService = new PlaylistsService(collaborationsService);
+  const playlistSongsService = new PlaylistSongsService();
+  const playlistSongActivitiesService = new PlaylistSongActivitiesService();
+  const storageService = new StorageService(
+    resolve(__dirname, "api/uploads/file/images")
+  );
+  const cacheService = new CacheService();
+  const albumLikesService = new AlbumLikesService(cacheService);
 
   const server = Hapi.server({
-    port: process.env.PORT,
+    port: process.env.PORT || 6000,
     host: process.env.HOST,
     routes: {
       cors: {
@@ -53,23 +75,12 @@ async function initServer() {
     },
   });
 
-  server.ext("onPreResponse", (req, h) => {
-    const { response } = req;
-
-    if (response instanceof ClientError) {
-      const newResponse = h.response({
-        status: "fail",
-        message: response.message,
-      });
-      newResponse.code(response.statusCode);
-      return newResponse;
-    }
-    return response.continue || response;
-  });
-
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -83,7 +94,7 @@ async function initServer() {
     },
     validate: (artifacts) => ({
       isValid: true,
-      credentials: {
+      credential: {
         id: artifacts.decoded.payload.id,
       },
     }),
@@ -91,54 +102,110 @@ async function initServer() {
 
   await server.register([
     {
-      plugin: songs,
+      plugin: albums,
       options: {
-        service: songService,
-        validator: SongValidator,
+        service: {
+          albumsService,
+          songsService,
+        },
+        validator: AlbumsValidator,
       },
     },
     {
-      plugin: albums,
+      plugin: songs,
       options: {
-        service: albumService,
-        validator: AlbumValidator,
+        service: songsService,
+        validator: SongsValidator,
       },
     },
     {
       plugin: users,
       options: {
-        service: userService,
-        validator: UserValidator,
+        service: usersService,
+        validator: UsersValidator,
       },
     },
     {
       plugin: authentications,
       options: {
-        authenticationService,
-        userService,
+        authenticationsService,
+        usersService,
         tokenManager: TokenManager,
-        validator: AuthenticationValidator,
+        validator: AuthenticationsValidator,
       },
     },
     {
       plugin: playlists,
       options: {
-        service: playlistService,
-        validator: PlaylistValidator,
+        service: playlistsService,
+        validator: PlaylistsValidator,
+      },
+    },
+    {
+      plugin: playlistSongs,
+      options: {
+        service: {
+          playlistSongsService,
+          playlistsService,
+          songsService,
+          playlistSongActivitiesService,
+        },
+        validator: PlaylistSongsValidator,
       },
     },
     {
       plugin: collaborations,
       options: {
-        collaborationService,
-        playlistService,
-        validator: CollaborationValidator,
+        service: {
+          collaborationsService,
+          playlistsService,
+          usersService,
+        },
+        validator: CollaborationsValidator,
+      },
+    },
+    {
+      plugin: playlistSongActivities,
+      options: {
+        service: {
+          playlistSongActivitiesService,
+          playlistsService,
+        },
+      },
+    },
+    {
+      plugin: _exports,
+      options: {
+        service: {
+          ProducerService,
+          playlistsService,
+        },
+        validator: ExportsValidator,
+      },
+    },
+    {
+      plugin: uploads,
+      options: {
+        service: {
+          storageService,
+          albumsService,
+        },
+        validator: UploadsValidator,
+      },
+    },
+    {
+      plugin: albumLikes,
+      options: {
+        service: {
+          albumLikesService,
+          albumsService,
+        },
       },
     },
   ]);
 
   await server.start();
-  console.info(`Server running in ${server.info.uri}`);
-}
+  console.log(`Server berjalan pada ${server.info.uri}`);
+};
 
-initServer();
+init();
