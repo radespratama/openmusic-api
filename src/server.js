@@ -26,7 +26,7 @@ const playlists = require("./api/playlists");
 const PlaylistsService = require("./services/postgres/PlaylistsService");
 const PlaylistsValidator = require("./validator/playlists");
 
-const playlistSongs = require("./api/playlist_songs");
+const playlistSongs = require("./api/playlistSongs");
 const PlaylistSongsService = require("./services/postgres/PlaylistSongsService");
 const PlaylistSongsValidator = require("./validator/playlist_songs");
 
@@ -34,7 +34,7 @@ const collaborations = require("./api/collaborations");
 const CollaborationsService = require("./services/postgres/CollaborationsService");
 const CollaborationsValidator = require("./validator/collaborations");
 
-const playlistSongActivities = require("./api/playlist_song_activities");
+const playlistSongActivities = require("./api/playlistSongActivities");
 const PlaylistSongActivitiesService = require("./services/postgres/PlaylistSongActivitiesService");
 
 const _exports = require("./api/exports");
@@ -45,7 +45,7 @@ const uploads = require("./api/uploads");
 const StorageService = require("./services/storage/StorageService");
 const UploadsValidator = require("./validator/uploads");
 
-const albumLikes = require("./api/album_likes");
+const albumLikes = require("./api/albumLikes");
 const AlbumLikesService = require("./services/postgres/AlbumLikesService");
 
 const CacheService = require("./services/redis/CacheService");
