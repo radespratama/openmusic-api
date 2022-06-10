@@ -12,23 +12,14 @@ exports.up = (pgm) => {
       type: "VARCHAR(50)",
       notNull: true,
     },
-    inserted_at: {
-      type: "TIMESTAMP",
-      notNull: true,
-      default: pgm.func("current_timestamp"),
-    },
-    updated_at: {
-      type: "TIMESTAMP",
-      notNull: true,
-      default: pgm.func("current_timestamp"),
-    },
   });
 
   pgm.addConstraint(
     "collaborations",
-    "unique_playlist_id_and_user_ud",
+    "unique_playlist_id_and_user_id",
     "UNIQUE(playlist_id, user_id)"
   );
+
   pgm.addConstraint(
     "collaborations",
     "fk_collaborations.playlist_id_playlists.id",

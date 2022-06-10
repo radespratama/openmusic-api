@@ -10,18 +10,15 @@ exports.up = (pgm) => {
     },
     owner: {
       type: "VARCHAR(50)",
-    },
-    inserted_at: {
-      type: "TIMESTAMP",
       notNull: true,
-      default: pgm.func("current_timestamp"),
-    },
-    updated_at: {
-      type: "TIMESTAMP",
-      notNull: true,
-      default: pgm.func("current_timestamp"),
     },
   });
+
+  pgm.addConstraint(
+    "playlists",
+    "fk_playlists.owner_users.id",
+    "FOREIGN KEY(owner) REFERENCES users(id) ON DELETE CASCADE"
+  );
 };
 
 exports.down = (pgm) => {

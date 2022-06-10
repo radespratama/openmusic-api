@@ -1,10 +1,15 @@
+/* eslint-disable max-len */
 const autoBind = require("auto-bind");
 const ClientError = require("../../exceptions/ClientError");
 
 class CollaborationsHandler {
-  constructor(service, validator) {
-    const { collaborationsService, playlistsService, usersService } = service;
-    this._service = collaborationsService;
+  constructor(
+    collaborationsService,
+    playlistsService,
+    usersService,
+    validator
+  ) {
+    this._collaborationsService = collaborationsService;
     this._playlistsService = playlistsService;
     this._usersService = usersService;
     this._validator = validator;
@@ -18,17 +23,13 @@ class CollaborationsHandler {
       const { id: credentialId } = req.auth.credentials;
       const { playlistId, userId } = req.payload;
 
-      await this._playlistsService.getPlaylistsById(playlistId);
-      await this._usersService.getUserById(userId);
-
       await this._playlistsService.verifyPlaylistOwner(
         playlistId,
         credentialId
       );
-      const collaborationId = await this._service.addCollaboration(
-        playlistId,
-        userId
-      );
+      await this._usersService.getUserById(userId);
+      const collaborationId = await this._collaborationsService.addCollaboration(playlistId, userId);
+
       const response = h.response({
         status: "success",
         message: "Kolaborasi berhasil ditambahkan",
@@ -63,11 +64,13 @@ class CollaborationsHandler {
       this._validator.validateCollaborationPayload(req.payload);
       const { id: credentialId } = req.auth.credentials;
       const { playlistId, userId } = req.payload;
+
       await this._playlistsService.verifyPlaylistOwner(
         playlistId,
         credentialId
       );
-      await this._service.deleteCollaboration(playlistId, userId);
+      await this._collaborationsService.deleteCollaboration(playlistId, userId);
+
       return {
         status: "success",
         message: "Kolaborasi berhasil dihapus",

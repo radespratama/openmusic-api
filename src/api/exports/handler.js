@@ -2,32 +2,32 @@ const autoBind = require("auto-bind");
 const ClientError = require("../../exceptions/ClientError");
 
 class ExportsHandler {
-  constructor(service, validator) {
-    const { ProducerService, playlistsService } = service;
-    this._service = ProducerService;
+  constructor(producerService, playlistsService, validator) {
+    this._producerService = producerService;
     this._playlistsService = playlistsService;
     this._validator = validator;
 
     autoBind(this);
   }
 
-  async postExportPlaylistSongsHandler(req, h) {
+  async postExportPlaylistsHandler(req, h) {
     try {
-      this._validator.validateExportPlaylistSongsPayload(req.payload);
+      this._validator.validateExportPlaylistsPayload(req.payload);
+      const { playlistId } = req.params;
+      const { id: userId } = req.auth.credentials;
+
+      await this._playlistsService.verifyPlaylistAccess(playlistId, userId);
+
       const message = {
-        userId: req.auth.credentials.id,
+        playlistId,
         targetEmail: req.payload.targetEmail,
-        playlistId: req.params.id,
       };
-      await this._playlistsService.verifyPlaylistAccess(
-        message.playlistId,
-        message.userId
-      );
-      await this._playlistsService.getPlaylistsById(message.playlistId);
-      await this._service.sendMessage(
-        "export:playlistSongs",
+
+      await this._producerService.sendMessage(
+        "export:playlists",
         JSON.stringify(message)
       );
+
       const response = h.response({
         status: "success",
         message: "Permintaan Anda dalam antrean",
@@ -43,7 +43,7 @@ class ExportsHandler {
         response.code(error.statusCode);
         return response;
       }
-      // Server ERROR!
+
       const response = h.response({
         status: "error",
         message: "Maaf, terjadi kegagalan pada server kami.",

@@ -11,17 +11,25 @@ class AuthenticationsHandler {
     autoBind(this);
   }
 
-  async postAuthenticationHandler({ payload }, h) {
+  async postAuthenticationHandler(req, h) {
     try {
-      this._validator.validatePostAuthenticationPayload(payload);
-      const { username, password } = payload;
+      this._validator.validatePostAuthenticationPayload(req.payload);
+
+      const { username, password } = req.payload;
       const id = await this._usersService.verifyUserCredential(
         username,
         password
       );
-      const accessToken = this._tokenManager.generateAccessToken({ id });
-      const refreshToken = this._tokenManager.generateRefreshToken({ id });
+
+      const accessToken = this._tokenManager.generateAccessToken({
+        id,
+      });
+      const refreshToken = this._tokenManager.generateRefreshToken({
+        id,
+      });
+
       await this._authenticationsService.addRefreshToken(refreshToken);
+
       const response = h.response({
         status: "success",
         message: "Authentication berhasil ditambahkan",
@@ -52,13 +60,17 @@ class AuthenticationsHandler {
     }
   }
 
-  async putAuthenticationHandler({ payload }, h) {
+  async putAuthenticationHandler(req, h) {
     try {
-      this._validator.validatePutAuthenticationPayload(payload);
-      const { refreshToken } = payload;
+      this._validator.validatePutAuthenticationPayload(req.payload);
+
+      const { refreshToken } = req.payload;
       await this._authenticationsService.verifyRefreshToken(refreshToken);
       const { id } = this._tokenManager.verifyRefreshToken(refreshToken);
-      const accessToken = this._tokenManager.generateAccessToken({ id });
+
+      const accessToken = this._tokenManager.generateAccessToken({
+        id,
+      });
       return {
         status: "success",
         message: "Access Token berhasil diperbarui",
@@ -86,15 +98,17 @@ class AuthenticationsHandler {
     }
   }
 
-  async deleteAuthenticationHandler({ payload }, h) {
+  async deleteAuthenticationHandler(req, h) {
     try {
-      this._validator.validateDeleteAuthenticationPayload(payload);
-      const { refreshToken } = payload;
+      this._validator.validateDeleteAuthenticationPayload(req.payload);
+
+      const { refreshToken } = req.payload;
       await this._authenticationsService.verifyRefreshToken(refreshToken);
       await this._authenticationsService.deleteRefreshToken(refreshToken);
+
       return {
         status: "success",
-        message: "Access token berhasil dihapus",
+        message: "Refresh token berhasil dihapus",
       };
     } catch (error) {
       if (error instanceof ClientError) {

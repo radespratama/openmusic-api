@@ -3,25 +3,24 @@ const ClientError = require("../../exceptions/ClientError");
 
 class UploadsHandler {
   constructor(service, validator) {
-    const { storageService, albumsService } = service;
-    this._service = storageService;
-    this._albumsService = albumsService;
+    this._service = service;
     this._validator = validator;
 
     autoBind(this);
   }
 
-  async postUploadImageHandler(req, h) {
+  async postUploadImageHandler(request, h) {
     try {
-      const { cover } = req.payload;
-      const { id } = req.params;
-      this._validator.validateImageHeaders(cover.hapi.headers);
-      const filename = await this._service.writeFile(cover, cover.hapi);
-      const fileloc = `http://${process.env.HOST}:${process.env.PORT}/upload/file/images/${filename}`;
-      await this._albumsService.addCoverValueById(id, fileloc);
+      const { data } = request.payload;
+      this._validator.validateImageHeaders(data.hapi.headers);
+
+      const filename = await this._service.writeFile(data, data.hapi);
+
       const response = h.response({
         status: "success",
-        message: `File telah disimpan dengan nama ${fileloc}`,
+        data: {
+          fileLocation: `http://${process.env.HOST}:${process.env.PORT}/upload/images/${filename}`,
+        },
       });
       response.code(201);
       return response;

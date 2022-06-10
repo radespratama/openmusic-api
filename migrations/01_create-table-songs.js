@@ -9,23 +9,23 @@ exports.up = (pgm) => {
       notNull: true,
     },
     year: {
-      type: "INT",
-      notNull: true,
-    },
-    genre: {
-      type: "TEXT",
+      type: "INTEGER",
       notNull: true,
     },
     performer: {
       type: "TEXT",
       notNull: true,
     },
+    genre: {
+      type: "TEXT",
+      notNull: true,
+    },
     duration: {
-      type: "INT",
+      type: "INTEGER",
       notNull: false,
     },
     album_id: {
-      type: "VARCHAR(50)",
+      type: "TEXT",
       notNull: false,
     },
     inserted_at: {
