@@ -48,6 +48,8 @@ const UploadsValidator = require("./validator/uploads");
 // cache
 const CacheService = require("./services/redis/CacheService");
 
+const ClientError = require("./exceptions/ClientError");
+
 const init = async () => {
   const cacheService = new CacheService();
   const albumsService = new AlbumsService(cacheService);
@@ -57,7 +59,7 @@ const init = async () => {
   const collaborationsService = new CollaborationsService();
   const playlistsService = new PlaylistsService(collaborationsService);
   const storageService = new StorageService(
-    resolve(__dirname, "api/albums/file/cover")
+    resolve(__dirname, "api/albums/file/covers")
   );
 
   const server = Hapi.server({
@@ -93,6 +95,21 @@ const init = async () => {
         id: artifacts.decoded.payload.id,
       },
     }),
+  });
+
+  server.ext("onPreResponse", (request, h) => {
+    const { response } = request;
+
+    if (response instanceof ClientError) {
+      const newResponse = h.response({
+        status: "fail",
+        message: response.message,
+      });
+      newResponse.code(response.statusCode);
+      return newResponse;
+    }
+
+    return response.continue || response;
   });
 
   await server.register([
